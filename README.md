@@ -1,6 +1,6 @@
 # GovOS Document Downloader
 
-GovOS Document Downloader is a userscript that modifies the document preview pages on GovOS public records access platforms (i.e., PublicSearch.us) to enable downloading of uncertified PDF documents. The script compiles individual document preview pages into a single PDF document and requires that a document preview be available.
+GovOS Document Downloader is a userscript that modifies the document preview pages on GovOS public records access platforms (e.g., PublicSearch.us) to enable downloading of uncertified PDF documents. The script compiles individual document preview pages into a single PDF document and requires that a document preview be available.
 
 ## Installation and Usage Instructions
 1. Install a userscript web browser extension like [Violentmonkey](https://violentmonkey.github.io/) (recommended) or [Tampermonkey](https://www.tampermonkey.net/).
