@@ -4,7 +4,7 @@
 // @namespace     https://www.github.com/rplanier
 // @source        https://www.github.com/rplanier/govos-document-downloader
 // @description   Adds a download button to the GovOS document summary page and compiles all watermarked pages into a single PDF for download.
-// @version       0.0.1c
+// @version       0.1.0
 // @match         *://*.publicsearch.us/*
 // @run-at        document-end
 // @require       https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js
