@@ -8,3 +8,6 @@ GovOS Document Downloader is a userscript that modifies the document preview pag
 3. Visit the document preview page of any document on a GovOS public record access platform (e.g., `https://[county][state].publicsearch.us/doc/[document-number]`). The document preview page typically provides a watermarked document preview and a summary of the document details.
 4. A green 'Download' button will now appear at the top of the document preview window.  Click the button and wait for the document to compile and automatically download.
 5. If the 'Download' button does not automatically appear, refresh the document preview page to force the userscript to reload.
+
+## Screenshots
+![screenshot](assets/img/Screenshot%201.png)
