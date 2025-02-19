@@ -41,7 +41,14 @@ async function evaluate() {
     b.setAttribute("class", buttonClass);
     b.style.opacity = 1;
     b.onclick = function() {
-      download();
+      b.disabled = true;
+      b.style.opacity = 0.5;
+      b.style.cursor = "not-allowed";
+      download().then(() => {
+        b.disabled = false;
+        b.style.opacity = 1;
+        b.style.cursor = "pointer";
+      });
     };
 
     // Append the button to the menu
