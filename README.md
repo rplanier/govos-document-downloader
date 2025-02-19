@@ -10,4 +10,4 @@ GovOS Document Downloader is a userscript that modifies the document preview pag
 5. If the 'Download' button does not automatically appear, refresh the document preview page to force the userscript to reload.
 
 ## Screenshots
-![screenshot](assets/img/Screenshot%201.png)
+![screenshot](assets/img/screenshot-1.png)
