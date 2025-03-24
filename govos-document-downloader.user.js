@@ -4,7 +4,7 @@
 // @namespace     https://www.github.com/rplanier
 // @source        https://www.github.com/rplanier/govos-document-downloader
 // @description   Adds a download button to the GovOS document summary page and compiles all watermarked pages into a single PDF for download.
-// @version       0.1.2
+// @version       0.1.3
 // @match         *://*.publicsearch.us/*
 // @run-at        document-end
 // @require       https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js
@@ -16,6 +16,7 @@
 
 // Declare global variables
   let book = "";
+  let caseNumber = "";
   let county = "";
   let domain = "";
   let documentNumber = 0;
@@ -23,6 +24,7 @@
   let pageNumber = 0;
   let state = "";
   let totalPages = 0;
+  let downloadButton, searchButton;
 
 // Create a mutation observer to detect page changes
 new MutationObserver(items => {
@@ -34,10 +36,9 @@ new MutationObserver(items => {
     }
   );
 
-let downloadButton, searchButton;
-
 // Evaluate the current page
 evaluate();
+
 
 /**
  * Add a download button
@@ -127,39 +128,6 @@ async function addSearchForm(parent) {
   parent.appendChild(form);
 }
 
-function parseDocumentInfo() {
-  // Determine the URL domain
-  const url = new URL(window.location.href);
-  domain = url.hostname;
-
-  // Determine the county and state
-  parts = domain.split(".");
-  const countyParts = parts[0].toLowerCase().split(" ");
-  for (let i = 0; i < countyParts.length; i++) {
-    countyParts[i] = countyParts[i].charAt(0).toUpperCase() + countyParts[i].substring(1);
-  }
-  county = countyParts.join(" ");
-  state = parts[1].toUpperCase();
-}
-
-/**
- * Evaluate the current page to determine whether to inject new elements
- **/
-async function evaluate() {
-  // Find the navigation menu and add a download button
-  const buttonsMenu = document.querySelector("nav#primary div");
-  if (buttonsMenu) {
-    // Parse the document information
-    parseDocumentInfo();
-
-    console.log("GovOS Document Downloader is running (" + county + " County, " + state + ")");
-
-    // Insert the download button and search form
-    await addDownloadButton(buttonsMenu);
-    await addSearchForm(buttonsMenu);
-  }
-}
-
 /**
  * Download the document images as a PDF
  **/
@@ -193,6 +161,9 @@ async function download() {
           case "Page:":
             pageNumber = itemValue;
             break;
+          case "Case Number:":
+            caseNumber = itemValue;
+            break;
           case "Number of Pages:":
             totalPages = itemValue;
             break;
@@ -200,13 +171,13 @@ async function download() {
     }
   }
 
-  let fileName = prompt("Save file as:", documentNumber + "_V" + volumeNumber + " P" + pageNumber + "_" + county + " " + state + ".pdf");
-  if (fileName == "") {
-    alert("A valid file name is required!");
+  // Prompt for the file ename
+  let fileName = prompt("Save file as:", getDocumentName());
+  if (!fileName) {
     return;
   }
 
-  console.log("Compiling pages for Document No. " + documentNumber + ", Volume " + volumeNumber + ", Page " + pageNumber + ". Please wait...");
+  console.log("Compiling page preview images. Please wait...");
 
   // Create a new jsPDF instance
   const { jsPDF } = window.jspdf;
@@ -250,4 +221,64 @@ async function download() {
   else {
     console.log("Error while parsing the image URL");
   }
+}
+
+/**
+ * Evaluate the current page to determine whether to inject new elements
+ **/
+async function evaluate() {
+  // Find the navigation menu and add a download button
+  const buttonsMenu = document.querySelector("nav#primary div");
+  if (buttonsMenu) {
+    // Parse the document information
+    parseDocumentInfo();
+
+    console.log("GovOS Document Downloader is running (" + county + " County, " + state + ")");
+
+    // Insert the download button and search form
+    await addDownloadButton(buttonsMenu);
+    await addSearchForm(buttonsMenu);
+  }
+}
+
+/**
+ * Generate the default document named based upon parsed fields
+ **/
+function getDocumentName() {
+  let fileNameParts = Array();
+
+  if (caseNumber != "") {
+    fileNameParts.push("Cause No. " + caseNumber);
+  }
+  else {
+    if (documentNumber != 0) {
+      fileNameParts.push(documentNumber);
+    }
+
+    if(volumeNumber != 0 && pageNumber != 0) {
+      fileNameParts.push("V" + volumeNumber + " P" + pageNumber);
+    }
+  }
+
+  fileNameParts.push(county + " " + state);
+
+  return fileNameParts.join("_");
+}
+
+/**
+ * Parse the county and state from the URL domain
+ **/
+function parseDocumentInfo() {
+  // Determine the URL domain
+  const url = new URL(window.location.href);
+  domain = url.hostname;
+
+  // Determine the county and state
+  parts = domain.split(".");
+  const countyParts = parts[0].toLowerCase().split(" ");
+  for (let i = 0; i < countyParts.length; i++) {
+    countyParts[i] = countyParts[i].charAt(0).toUpperCase() + countyParts[i].substring(1);
+  }
+  county = countyParts.join(" ");
+  state = parts[1].toUpperCase();
 }
