@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name          GovOS Document Downloader
-// @author        rplanier
+// @author        Preston Lanier (preston@lanier.email)
 // @namespace     https://www.github.com/rplanier
 // @source        https://www.github.com/rplanier/govos-document-downloader
 // @description   Adds a download button to the GovOS document summary page and compiles all watermarked pages into a single PDF for download.
-// @version       0.1.1
+// @version       0.1.2
 // @match         *://*.publicsearch.us/*
 // @run-at        document-end
 // @require       https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js
@@ -13,6 +13,16 @@
 // @downloadURL   https://raw.githubusercontent.com/rplanier/govos-document-downloader/master/govos-document-downloader.user.js
 // @supportURL    https://github.com/rplanier/govos-document-downloader/issues
 // ==/UserScript==
+
+// Declare global variables
+  let book = "";
+  let county = "";
+  let domain = "";
+  let documentNumber = 0;
+  let volumeNumber = 0;
+  let pageNumber = 0;
+  let state = "";
+  let totalPages = 0;
 
 // Create a mutation observer to detect page changes
 new MutationObserver(items => {
@@ -66,12 +76,12 @@ async function addDownloadButton(parent) {
  **/
 async function addSearchForm(parent) {
   // Determine the existing button classes
-    const buttonClass = parent.lastChild.className;
+  const buttonClass = parent.lastChild.className;
 
   // Create a form
   let form = document.createElement("form");
   form.method = "GET";
-  form.action = "https://eddy.nm.publicsearch.us/results?department=RP&page=138&recordedDateRange=16000101%2C20250219&searchType=advancedSearch&volume=1175";
+  form.action = "https://" + domain + "/results?department=RP&recordedDateRange=16000101%2C20250219&searchType=advancedSearch";
   form.style.display = "flex";
 
   let inputDepartment = document.createElement("input");
@@ -117,6 +127,21 @@ async function addSearchForm(parent) {
   parent.appendChild(form);
 }
 
+function parseDocumentInfo() {
+  // Determine the URL domain
+  const url = new URL(window.location.href);
+  domain = url.hostname;
+
+  // Determine the county and state
+  parts = domain.split(".");
+  const countyParts = parts[0].toLowerCase().split(" ");
+  for (let i = 0; i < countyParts.length; i++) {
+    countyParts[i] = countyParts[i].charAt(0).toUpperCase() + countyParts[i].substring(1);
+  }
+  county = countyParts.join(" ");
+  state = parts[1].toUpperCase();
+}
+
 /**
  * Evaluate the current page to determine whether to inject new elements
  **/
@@ -124,6 +149,12 @@ async function evaluate() {
   // Find the navigation menu and add a download button
   const buttonsMenu = document.querySelector("nav#primary div");
   if (buttonsMenu) {
+    // Parse the document information
+    parseDocumentInfo();
+
+    console.log("GovOS Document Downloader is running (" + county + " County, " + state + ")");
+
+    // Insert the download button and search form
     await addDownloadButton(buttonsMenu);
     await addSearchForm(buttonsMenu);
   }
@@ -133,18 +164,7 @@ async function evaluate() {
  * Download the document images as a PDF
  **/
 async function download() {
-
-  // Create a new jsPDF instance
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF();
-
-  // Define document variables
-  let instrumentNumber = 0;
-  let bookNumber = 0;
-  let pageNumber = 0;
-  let totalPages = 0;
-
-  // Parse the document information
+  // Parse the document summary
   const summary = document.querySelector("div.doc-preview-summary__columns");
   for (const column of summary.children) {
     for (const item of column.children) {
@@ -152,11 +172,23 @@ async function download() {
       const itemValue = item.children[1].textContent.trim();
 
       switch(itemText) {
+          case "Document Number:":
+            documentNumber = itemValue;
+            break;
           case "Instrument Number:":
-            instrumentNumber = itemValue;
+            documentNumber = itemValue;
+            break;
+          case "Book/Volume/Page:":
+            parts = itemValue.split("/");
+            book = parts[0];
+            volumeNumber = parts[1];
+            pageNumber = parts[2];
+            break;
+          case "Volume:":
+            volumeNumber = itemValue;
             break;
           case "Book:":
-            bookNumber = itemValue;
+            volumeNumber = itemValue;
             break;
           case "Page:":
             pageNumber = itemValue;
@@ -168,6 +200,17 @@ async function download() {
     }
   }
 
+  let fileName = prompt("Save file as:", documentNumber + "_V" + volumeNumber + " P" + pageNumber + "_" + county + " " + state + ".pdf");
+  if (fileName == "") {
+    alert("A valid file name is required!");
+    return;
+  }
+
+  console.log("Compiling pages for Document No. " + documentNumber + ", Volume " + volumeNumber + ", Page " + pageNumber + ". Please wait...");
+
+  // Create a new jsPDF instance
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF();
   // Parse the first image URL
   const imageUrl = document.querySelector("article svg image").getAttribute("xlink:href");
   const result = imageUrl.matchAll(/(.+)_([\d]+)\.([\w]+)/gi);
@@ -202,7 +245,7 @@ async function download() {
     }
 
     // Save the PDF document
-    pdf.save(instrumentNumber + " - " + bookNumber + "-" + pageNumber + ".pdf");
+    pdf.save(fileName);
   }
   else {
     console.log("Error while parsing the image URL");
