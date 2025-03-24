@@ -3,12 +3,15 @@
 GovOS Document Downloader is a userscript that modifies the document preview pages on GovOS public records access platforms (e.g., PublicSearch.us) to enable downloading of watermarked PDF documents and quick instrument searching. The script compiles individual document preview images into a single PDF document.
 
 > [!IMPORTANT]  
-> **Document image previews must be available to compile a PDF document. If a particular county does not permit free public previews of watermarked pages, then this userscript will not work for that county.**
+> Document image previews must be available to compile a PDF document. If a particular county does not permit free public previews of watermarked pages, then this userscript will not work for that county.
 
 ## Installation Instructions
 
 1. Install a userscript web browser extension like [Violentmonkey](https://violentmonkey.github.io/) (recommended) or [Tampermonkey](https://www.tampermonkey.net/) to your web browser.
 2. Open the [latest version](https://raw.githubusercontent.com/rplanier/govos-document-downloader/master/govos-document-downloader.user.js) of this userscript in your web browser. Your userscript web browser extension should prompt you to install the userscript.
+
+> [!CAUTION]  
+> Userscript web browser extensions allow installed scripts to execute JavaScript on website pages which match one or more given URL patterns. Given the power that these web browser extensions can potentially unlock, <ins>you should only install userscripts from trusted sources!</ins>
 
 ## Usage Instructions
 
