@@ -142,23 +142,46 @@ async function addSearchForm(parent) {
 
 /**
  * Get the Redux store from React internals
+ * Tries multiple entry points and patterns for robustness
  **/
 function getReduxStore() {
-  const article = document.querySelector('article');
-  if (!article) return null;
+  // Try multiple possible entry point selectors
+  const selectors = [
+    'div.doc-preview__summary',
+    'article',
+    'div.doc-preview-summary__columns',
+    'main',
+    '#root'
+  ];
 
-  const reactKey = Object.keys(article).find(k => k.startsWith('__reactInternal'));
-  if (!reactKey) return null;
+  for (const selector of selectors) {
+    const el = document.querySelector(selector);
+    if (!el) continue;
 
-  let node = article[reactKey];
-  // Traverse up the React fiber tree to find the store
-  for (let i = 0; i < 20; i++) {
-    if (!node) break;
-    const store = node.memoizedState?.memoizedState?.[0]?.store;
-    if (store && typeof store.getState === 'function') {
-      return store;
+    const reactKey = Object.keys(el).find(k => k.startsWith('__reactInternal') || k.startsWith('__reactFiber'));
+    if (!reactKey) continue;
+
+    let node = el[reactKey];
+    // Traverse up the React fiber tree to find the store
+    for (let i = 0; i < 40; i++) {
+      if (!node) break;
+      // Check pendingProps.store
+      if (node.pendingProps?.store?.getState) {
+        return node.pendingProps.store;
+      }
+      // Check memoizedState patterns
+      const ms = node.memoizedState;
+      if (ms?.store?.getState) {
+        return ms.store;
+      }
+      if (ms?.memoizedState?.[0]?.store?.getState) {
+        return ms.memoizedState[0].store;
+      }
+      if (ms?.element?.props?.store?.getState) {
+        return ms.element.props.store;
+      }
+      node = node.return;
     }
-    node = node.return;
   }
   return null;
 }
